@@ -1,0 +1,140 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace 다층퍼셉트론
+{
+    public partial class Form1 : Form
+    {
+        float eta = 0.1f;
+        float[] output = new float[8];
+        float[] w1_o = new float[8] { 1, 1, 1, 1, 1, 1, 1, 1 };
+        float[] w1_i = new float[25] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        float hidden1 = 0f;
+        float hidden2 = 0f;
+        float[] delta = new float[8];
+        float[] hiddelta = new float[2];
+        int[] inputA = new int[25];
+        int[,] option = new int[,] { { 1, 0, 0, 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0, 0, 0, 0 }, { 0, 0, 1, 0, 0, 0, 0, 0 },{ 0, 0, 0, 1, 0, 0, 0, 0 }, { 0, 0, 0, 0, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0, 1, 0, 0 }, { 0, 0, 0, 0, 0, 0, 1, 0 }, { 0, 0, 0, 0, 0, 0, 0, 1 } };
+        
+        int[] check = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        int[,] set = new int[8,25] { { 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}, { 1, 0, 0, 0,0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1,1 }, { 1, 1, 1, 1,1,  1, 0, 0, 0,0, 1, 0, 0, 0,0, 1, 0, 0, 0, 0, 1, 1, 1, 1,1 },{ 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1 }, {1,1,1,1,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,1,1,1,1 }, {1,0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1 }, {0,0,1,0,0,0,1,0,1,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,1 }, {0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,0 } };
+        
+        public static float Sigmoid(double value)
+        {
+            return (float)(1.0 / (1.0 + Math.Pow(Math.E, -value)));
+        }
+        
+        public Form1()
+        {
+            InitializeComponent();
+            
+        }
+        private void button1_Clicked(object sender, EventArgs e)
+        {
+            
+            int q = 0;
+            while(q < 130000){
+                
+                for(int s = 0; s < 8; s++)
+                {
+                    hidden1 = 0;
+                    hiddelta[0] = 0;
+                    hidden2 = 0;
+                    for (int i = 0; i < 25; i++)
+                    {
+                        hidden1 = hidden1 + set[s, i] * w1_i[i];
+                        hidden2 = hidden2 + set[s, i] * w1_i[i];
+                    }
+                    hidden1 = Sigmoid(hidden1);
+                    hidden2 = Sigmoid(hidden2);
+
+                    for (int j = 0; j < 8; j++)
+                    {
+                        output[j] = Sigmoid(hidden1 * w1_o[j] + hidden2 * w1_o[j]);
+                    }
+                    for (int k = 0; k < 8; k++)
+                    {
+                        delta[k] = output[k] * (1 - output[k]) * (option[s,k] - output[k]);
+                    }
+                    
+                    
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        hiddelta[i] = hiddelta[i] + delta[i] * w1_o[i];
+                    }
+                    for(int j = 0; j < 2; j++)
+                    {
+                        hiddelta[j] = hiddelta[j] * hidden1 * (1 - hidden1);
+                    }
+
+                    //가중치조정
+                    for (int i = 0; i < 8; i++)
+                    {
+                        w1_o[i] = w1_o[i] + eta * delta[i] * hidden1;
+                    }
+                    for (int i = 0; i < 25; i++)
+                    {
+                        w1_i[i] = w1_i[i] + eta * hiddelta[0] * set[s, i];
+                    }
+                    
+                }
+                q++;
+                
+
+                
+                
+
+            }
+            
+            if (checkBox1.Checked)
+                inputA[0] = 1;
+
+            hidden1 = 0;
+            hidden2 = 0;
+
+            for (int i = 0; i < 25; i++)
+            {
+                hidden1 = hidden1 + inputA[i] * w1_i[i];
+                hidden2 = hidden2 + inputA[i] * w1_i[i];
+            }
+            hidden1 = Sigmoid(hidden1);
+            hidden2 = Sigmoid(hidden2);
+
+            for (int j = 0; j < 8; j++)
+            {
+                output[j] = Sigmoid(hidden1 * w1_o[j] + hidden2 * w1_o[j]);
+            }
+            
+            float m = output.Max();
+
+            // Positioning max
+            int p = Array.IndexOf(output, m);
+            textBox1.Text = p.ToString();
+            
+            
+
+
+
+
+        }
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            
+            if(check[0] == 1)
+            {
+                checkBox1.BackColor = Color.Red;
+                check[0] = 0;
+            }
+            else
+            {
+                checkBox1.BackColor = Color.White;
+                check[0] = 1;
+            }
